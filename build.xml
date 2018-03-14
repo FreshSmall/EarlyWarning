@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="earlywarning" basedir="../../" default="usage">
+
+	<property name="module.name" value="earlywarning"/>
+	<property name="module.ex.flag" value="false"/>
+	
+	<property file="ant/build.properties"/>
+	
+	<property name="plugin.dir" value="plugin"/>
+	<property name="app.dir" value="webapp"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="ant.dir" value="ant"/>
+	<property name="app.lib.dir" value="${app.dir}/WEB-INF/lib"/>
+	<property name="classes.dir" value="${app.dir}/WEB-INF/classes"/>
+	<property name="lib.temp.dir" value="${lib.dir}/temp"/>
+	<property name="build.dir" value="bin"/>
+	
+	<property name="build.module.dir" value="${build.dir}/${module.name}"/>
+	<property name="src.module.dir" value="${plugin.dir}/${module.name}"/>
+	<property name="egova.module.name" value="egova-${module.name}"/>
+	
+	<property name="build.module.ex.dir" value="${build.module.dir}-ex"/>
+	<property name="src.module.ex.dir" value="${src.module.dir}-ex"/>
+	<property name="egova.module.ex.name" value="${egova.module.name}-ex"/>
+	
+	<path id="master-classpath">
+		<fileset dir="${lib.dir}/build"><include name="*.jar"/></fileset>
+	</path>
+	
+	<path id="base-classpath">
+		<fileset dir="${app.lib.dir}">
+			<include name="egova-base.jar"/>
+			<include name="egova-bizbase-ex-mapping.jar"/>
+			<include name="egova-bizbase.jar"/>
+			<include name="egova-bizbase-ex.jar"/>
+			<include name="egova-workflow.jar"/>
+			<include name="egova-ali.jar"/>
+			<include name="egova-form.jar"/>
+			<include name="egova-sms.jar"/>
+			<include name="egova-message.jar"/>
+			<include name="egova-media.jar"/>
+			<include name="egova-bizbase-biz.jar"/>
+			<include name="egova-statis.jar"/>
+		</fileset>
+	</path>
+	
+	<path id="module-classpath">
+		<fileset dir="${app.lib.dir}">
+			<include name="${egova.module.name}.jar"/>
+		</fileset>
+	</path>
+	
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" 
+		classpath="${ant.dir}/ant-contrib-1.0b2.jar"/>
+	
+	<target name="build" depends="prepare-build,build-module" 
+		description="compile each  components java source files into class files and generate jar files.">
+	</target>
+	
+	<!-- compile module -->
+	<target name="build-module" 
+		description="compile eGova module component source java files into class files and generate a jar file.">
+		<mkdir dir="${build.module.dir}"/>		
+		<javac encoding="utf-8" destdir="${build.module.dir}" source="${javac.src.ver}" target="${javac.target.ver}" debug="true" includeantruntime="on"
+				deprecation="false" optimize="false" failonerror="true">
+			<src path="${src.module.dir}"/>
+			<classpath refid="master-classpath"/>
+			<classpath refid="base-classpath"/>
+		</javac>
+		<tstamp prefix="build.">
+			<format property="timesign" pattern="yyyy-MM-dd HH:mm:ss"/>
+		</tstamp>
+		<jar jarfile="${lib.temp.dir}/${egova.module.name}temp.jar" compress="true" basedir="${build.module.dir}">
+			<metainf dir="${src.module.dir}/META-INF">
+                 <include name="**/*.*"/>
+            </metainf>
+			<manifest>
+				<attribute name="Built-By" value="${compile.user}"/>
+				<attribute name="Specification-Title" value="${egova.module.name}.jar"/>
+				<attribute name="Specification-Version" value="${version}"/>
+				<attribute name="Specification-Vendor" value="${corp.info}"/>
+				<attribute name="Implementation-Time" value="${build.timesign}"/>
+			</manifest>
+		</jar>
+		<move file="${lib.temp.dir}/${egova.module.name}temp.jar" tofile="${app.lib.dir}/${egova.module.name}.jar"/>
+	</target>
+	
+	<target name="build-module-ex" 
+			description="compile eGova module component source java files into class files and generate a jar file.">
+		<if><equals arg1="true" arg2="${module.ex.flag}"></equals>
+			<then>
+				<mkdir dir="${build.module.ex.dir}"/>
+				<javac encoding="utf-8" destdir="${build.module.ex.dir}" source="${javac.src.ver}" 
+					target="${javac.target.ver}" debug="true" includeantruntime="on"
+					deprecation="false" optimize="false" failonerror="true">
+					<src path="${src.module.dir}"/>
+					<classpath refid="master-classpath"/>
+					<classpath refid="base-classpath"/>
+					<classpath refid="module-classpath"/>
+				</javac>
+				<tstamp prefix="build.">
+					<format property="timesign" pattern="yyyy-MM-dd HH:mm:ss"/>
+				</tstamp>
+				<jar jarfile="${lib.temp.dir}/${egova.module.ex.name}temp.jar" compress="true" basedir="${build.module.ex.dir}">
+					<metainf dir="${src.module.ex.dir}/META-INF">
+		                 <include name="**/*.*"/>
+		            </metainf>
+					<manifest>
+						<attribute name="Built-By" value="${compile.user}"/>
+						<attribute name="Specification-Title" value="${egova.module.ex.name}.jar"/>
+						<attribute name="Specification-Version" value="${version}"/>
+						<attribute name="Specification-Vendor" value="${corp.info}"/>
+						<attribute name="Implementation-Time" value="${build.timesign}"/>
+					</manifest>
+				</jar>
+				<move file="${lib.temp.dir}/${egova.module.ex.name}temp.jar" tofile="${app.lib.dir}/${egova.module.ex.name}.jar"/>
+			</then>
+			<else>
+			</else>
+		</if>
+	</target>
+	
+	<!-- prepare compile -->
+	<target name="prepare-build" description="copy lib files and copy config files into classpath directory.">
+		<delete dir="${build.module.dir}"/>
+		<delete file="${lib.temp.dir}/${egova.module.name}temp.jar"/>
+		<delete file="${app.lib.dir}/${egova.module.name}.jar"/>
+		<delete file="${lib.temp.dir}/${egova.module.ex.name}temp.jar"/>
+		<delete file="${app.lib.dir}/${egova.module.ex.name}.jar"/>
+		<mkdir dir="${lib.temp.dir}"/>
+		<mkdir dir="${app.lib.dir}"/>
+    </target>
+	
+	<!-- easy build , developer temp use -->
+	<target name="easy-build"
+			description="compile Java sources into classes directory without building jar files.">
+		<echo message="---------- easy building... ----------"/>
+		<echo message="generate new class and jar files."/>
+		<mkdir dir="${classes.dir}"/>
+		<javac srcdir="${src.module.dir}" destdir="${classes.dir}"
+			encoding="utf-8"  source="${javac.src.ver}" target="${javac.target.ver}" debug="true" includeantruntime="on"
+			deprecation="false" optimize="false" 	failonerror="true">
+			<classpath refid="master-classpath"/>
+		</javac>
+	</target>
+	
+	<!-- usage-->
+	<target name="usage">
+		<echo message="build: prepare-build and build-module."/>
+		<echo message="build-module: compile java sources into new jar files."/>
+		<echo message="build-module-ex: compile java sources into new jar files."/>
+		<echo message="prepare-build: copy lib files and copy config files into classpath directory."/>
+		<echo message="easy-build: compile java sources to .class into /WEB-INF/classes."/>
+	</target>
+
+</project>
