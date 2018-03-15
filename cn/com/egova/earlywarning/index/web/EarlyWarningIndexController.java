@@ -9,6 +9,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cn.com.egova.earlywarning.index.service.WarnInfoService;
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -35,6 +37,9 @@ import cn.com.egova.bizbase.tools.SysConfigUtils;
 @Controller
 public class EarlyWarningIndexController{
 
+
+
+
 	public static Set<String> EURBAN_GLOBAL_STYLE = new HashSet<String>();
 	static{
 		EURBAN_GLOBAL_STYLE.add("blue");
@@ -49,7 +54,9 @@ public class EarlyWarningIndexController{
 
 	@Autowired
 	private HumanManager humanManager;
-	
+	@Autowired
+	private WarnInfoService warnInfoService;
+
 	private static final String EARLYWARNING_DESKTOP_VIEW = "earlywarning/main/main";
 	private static final String EARLYWARNING_DEFAULT_VIEW = "earlywarning/desktop2/desktop";
 
@@ -66,6 +73,7 @@ public class EarlyWarningIndexController{
 			c.setPath("/");
 			response.addCookie(c);
 		}
+		warnInfoService.findAllWarnInfo();
 		response.addCookie(new Cookie("eUrbanGlobalLogo", SysConfigUtils.getSysConfigStrValue(ConfigItemNameConst.COMMON_LOGO_NAME)));
 		ModelAndView mo = new ModelAndView();
 		LoginPageConfig loginPageConfig = new LoginPageConfig();
